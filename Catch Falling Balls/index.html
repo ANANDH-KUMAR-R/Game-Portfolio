@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catch Balls</title>
+  <link rel="icon" href="Ball logo.jpg">
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: url(Catah\ balls\ bgi.webp) no-repeat center center;
+      background-size: cover;
+      color: #fff;
+      font-family: Arial, sans-serif;
+    }
+
+    #gameCanvas {
+      border: 2px solid #fff;
+      background-color: rgba(0, 18, 51, 0.8);
+      max-width: 100%;
+      height: auto;
+    }
+
+    @media (max-width: 600px) {
+      #gameCanvas {
+        width: 100%;
+        height: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="400" height="600"></canvas>
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    // Adjust canvas for responsiveness
+    function resizeCanvas() {
+      const canvasContainer = document.body;
+      canvas.width = canvasContainer.clientWidth * 0.9;
+      canvas.height = canvasContainer.clientHeight * 0.9;
+    }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    let basketWidth = canvas.width * 0.12;
+    const basketHeight = 20;
+    let basketX = (canvas.width - basketWidth) / 2;
+    let score = 0;
+
+    const stars = [];
+    const starRadius = 10;
+    const starFallSpeed = 3;
+
+    document.addEventListener("mousemove", moveBasket);
+
+    function moveBasket(event) {
+      const canvasRect = canvas.getBoundingClientRect();
+      basketX = event.clientX - canvasRect.left - basketWidth / 2;
+    }
+
+    function createStar() {
+      const x = Math.random() * (canvas.width - starRadius * 2) + starRadius;
+      const color = `hsl(${Math.random() * 360}, 100%, 50%)`;
+      stars.push({ x, y: 0, color });
+    }
+
+    function updateStars() {
+      for (let i = 0; i < stars.length; i++) {
+        stars[i].y += starFallSpeed;
+        if (
+          stars[i].y + starRadius >= canvas.height - basketHeight &&
+          stars[i].x > basketX &&
+          stars[i].x < basketX + basketWidth
+        ) {
+          stars.splice(i, 1);
+          score++;
+          i--;
+        } else if (stars[i].y > canvas.height) {
+          stars.splice(i, 1);
+          i--;
+        }
+      }
+    }
+
+    function drawBasket() {
+      ctx.fillStyle = "#ffdd00";
+      ctx.fillRect(basketX, canvas.height - basketHeight, basketWidth, basketHeight);
+    }
+
+    function drawStars() {
+      for (const star of stars) {
+        ctx.fillStyle = star.color;
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, starRadius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function drawScore() {
+      ctx.font = "20px Arial";
+      ctx.fillStyle = "#ffdd00";
+      ctx.fillText("Score: " + score, 10, 30);
+    }
+
+    function updateGame() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawBasket();
+      drawStars();
+      drawScore();
+      updateStars();
+      requestAnimationFrame(updateGame);
+    }
+
+    setInterval(createStar, 1000);
+    updateGame();
+  </script>
+</body>
+</html>

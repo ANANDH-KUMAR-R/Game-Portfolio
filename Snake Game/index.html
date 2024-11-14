@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game</title>
+    <link rel="icon" href="Snake logo.png">
+    <style>
+        /* General page styling */
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            text-align: center;
+            background-color: #222; /* Dark background fallback */
+            color: #fff; /* White text for contrast */
+            margin: 0;
+            padding: 0;
+            background-image: url(snake-bg.jpg); /* Example background image */
+            background-size: cover; /* Ensure the background covers the whole screen */
+            background-attachment: fixed; /* Keep background fixed when scrolling */
+            background-repeat: no-repeat; /* Prevent repetition */
+        }
+
+        h1 {
+            margin: 20px;
+            font-size: 2em;
+            color: #f5a623; /* Bright yellow/orange for header */
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+        }
+
+        #gameCanvas {
+            background-image: url(snake-bg.jpg); /* Snake game background */
+            background-repeat: repeat;
+            min-height: 100%;
+            display: block;
+            margin: 0 auto;
+            border: 4px solid #fff; /* White border around canvas */
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5); /* Subtle shadow effect */
+        }
+
+        h2 {
+            font-size: 4.5em;
+            font-weight: bold;
+            color: #f5a623;
+            margin-top: 10px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
+        }
+        
+        /* Styling the score */
+        #score {
+            font-size: 3.2em;
+            color: #fff;
+            margin: 20px;
+        }
+
+        /* Styling for the game-over alert */
+        .game-over {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+    </style>
+</head>
+<body>
+    <h1>Snake Game</h1>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <h2 id="score">Score: 0</h2>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        const scale = 20; // Size of each grid block
+        const rows = canvas.height / scale;
+        const columns = canvas.width / scale;
+
+        let score = 0;
+        let snake;
+        let food;
+
+        (function setup() {
+            snake = new Snake();
+            food = new Food();
+            window.setInterval(update, 210); // Game update every 100ms
+            window.addEventListener("keydown", changeDirection);
+        })();
+
+        function update() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            snake.move();
+            snake.draw();
+            
+            food.draw();
+            
+            if (snake.eat(food)) {
+                score += 10;
+                food = new Food(); // Generate new food
+                document.getElementById("score").textContent = "Score: " + score;
+            }
+
+            if (snake.collide()) {
+                alert("Game Over! Your score: " + score);
+                score = 0;
+                document.getElementById("score").textContent = "Score: " + score;
+                snake = new Snake(); // Reset the snake
+            }
+        }
+
+        function changeDirection(event) {
+            const direction = event.key.replace("Arrow", "").toLowerCase();
+            snake.changeDirection(direction);
+        }
+
+        function Snake() {
+            this.snakeArray = [{x: 2, y: 2}]; // Initial position
+            this.direction = "right";
+
+            this.move = function() {
+                const head = Object.assign({}, this.snakeArray[0]);
+
+                switch (this.direction) {
+                    case "up":
+                        head.y -= 1;
+                        break;
+                    case "down":
+                        head.y += 1;
+                        break;
+                    case "left":
+                        head.x -= 1;
+                        break;
+                    case "right":
+                        head.x += 1;
+                        break;
+                }
+
+                this.snakeArray.unshift(head);
+                this.snakeArray.pop();
+            };
+
+            this.changeDirection = function(direction) {
+                if (this.direction === "up" && direction !== "down") {
+                    this.direction = direction;
+                } else if (this.direction === "down" && direction !== "up") {
+                    this.direction = direction;
+                } else if (this.direction === "left" && direction !== "right") {
+                    this.direction = direction;
+                } else if (this.direction === "right" && direction !== "left") {
+                    this.direction = direction;
+                }
+            };
+
+            this.draw = function() {
+                this.snakeArray.forEach(function(segment, index) {
+                    ctx.fillStyle = index === 0 ? "green" : "lime"; // Head is green
+                    ctx.fillRect(segment.x * scale, segment.y * scale, scale, scale);
+                });
+            };
+
+            this.eat = function(food) {
+                if (this.snakeArray[0].x === food.x && this.snakeArray[0].y === food.y) {
+                    this.snakeArray.push({}); // Grow snake
+                    return true;
+                }
+                return false;
+            };
+
+            this.collide = function() {
+                const head = this.snakeArray[0];
+
+                // Check for wall collision
+                if (head.x < 0 || head.x >= columns || head.y < 0 || head.y >= rows) {
+                    return true;
+                }
+
+                // Check for collision with itself
+                for (let i = 1; i < this.snakeArray.length; i++) {
+                    if (head.x === this.snakeArray[i].x && head.y === this.snakeArray[i].y) {
+                        return true;
+                    }
+                }
+                return false;
+            };
+        }
+
+        function Food() {
+            this.x = Math.floor(Math.random() * columns);
+            this.y = Math.floor(Math.random() * rows);
+
+            this.draw = function() {
+                ctx.fillStyle = "red";
+                ctx.fillRect(this.x * scale, this.y * scale, scale, scale);
+            };
+        }
+    </script>
+</body>
+</html>
